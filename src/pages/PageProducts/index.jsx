@@ -6,8 +6,8 @@ import { RadioButton } from 'primereact/radiobutton';
 import { useEffect, useMemo, useState } from "react";
 import { API } from "../../services";
 import Product from "../../components/Product";
-        
-        
+
+
 
 const PageProductsContainer = styled.div`
     padding: 40px 100px;
@@ -47,31 +47,32 @@ const PageProducts = () => {
     const [filters, setFilters] = useState([]);
     const [itensFiltrados, setItensFiltrados] = useState([]);
     const [estado, setEstado] = useState('');
-    
-    async function getBrands(){
+
+    async function getBrands() {
         const response = await API.get('brands');
         setBrands(response.data);
     }
 
-    async function getCategories(){
+    async function getCategories() {
         const response = await API.get('categories');
         setCategories(response.data);
     }
 
-    async function getGenders(){
+    async function getGenders() {
         const response = await API.get('genders');
         setGenders(response.data);
     }
 
-    async function getProducts(){
+    async function getProducts() {
         const response = await API.get('products');
+        setProducts(response.data);
         setItensFiltrados([...response.data.sort((a, b) => b.review_rate - a.review_rate)]);
     }
 
-    function checkSelectedItems(e){
+    function checkSelectedItems(e) {
         let isSelected = e.target.checked;
         let value = e.target.value;
-        if(!isSelected){
+        if (!isSelected) {
             setFilters((prevData) => {
                 return prevData.filter((item) => item != value);
             });
@@ -86,20 +87,27 @@ const PageProducts = () => {
         getGenders();
         getProducts();
     }, []);
-    
+
     useEffect(() => {
-        switch(ordenacao){
+        switch (ordenacao) {
             case 1:
                 setItensFiltrados([...itensFiltrados.sort((a, b) => b.review_rate - a.review_rate)]);
-            break;
+                break;
             case 2:
                 setItensFiltrados([...itensFiltrados.sort((a, b) => a.product_price - b.product_price)]);
-            break;
+                break;
             case 3:
                 setItensFiltrados([...itensFiltrados.sort((a, b) => b.product_price - a.product_price)]);
-            break;
+                break;
         }
     }, [ordenacao, setItensFiltrados]);
+
+    useEffect(() => {
+        if (filters.length > 0) {
+            const busca = products.filter(p => filters.some(f => f === p.brand_name));
+            setItensFiltrados([...busca])
+        }
+    }, [filters, products, setItensFiltrados])
 
     return (
         <PageProductsContainer>
@@ -110,7 +118,7 @@ const PageProducts = () => {
                 <div>
                     <h6 className="p-3 border-1 border-round">
                         <b>Ordenar por mais relevantes:</b>
-                        <Dropdown 
+                        <Dropdown
                             value={ordenacao}
                             options={tiposDeOrdenacao}
                             optionLabel="name"
@@ -147,7 +155,7 @@ const PageProducts = () => {
                             {
                                 categories.map((c) => (
                                     <li key={c.category_id} className="flex gap-3 mb-2">
-                                        <Checkbox 
+                                        <Checkbox
                                             id={c.category_name}
                                             value={c.category_name}
                                             onChange={(e) => checkSelectedItems(e)}
@@ -185,7 +193,7 @@ const PageProducts = () => {
                                 <label htmlFor="novo" onClick={() => setEstado('novo')}>Novo</label>
                             </li>
                             <li className="flex gap-3 mb-2">
-                                <RadioButton 
+                                <RadioButton
                                     id="usado"
                                     onChange={() => setEstado('usado')}
                                     checked={estado == 'usado'}
@@ -200,7 +208,7 @@ const PageProducts = () => {
                         itensFiltrados.map(p => (
                             <Product
                                 key={p.product_id}
-                                name={`${p.review_rate} ${p.product_name}`}
+                                name={`${p.brand_name} ${p.product_name}`}
                                 image={p.product_image}
                                 categoryName={p.category_name}
                                 discount={p.product_discount}
